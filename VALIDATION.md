@@ -8,9 +8,12 @@ Version **1.5.0**, checked on **2026-10-01**.
   failures and complete outages.
 - Both JavaScript suites passed, including all 13 locales.
 - Live collection produced a validated feed from the official Python sources.
-- Repository visibility is public and GitHub Pages is enabled with Actions as
-  the publishing source. Initial deployment and installed-plugin verification
-  are in progress.
+- Repository is public and GitHub Pages deployment succeeded in
+  [workflow run 36912154742](https://github.com/15r10nk/omarchy-python-releases/actions/runs/36912154742).
+- The live feed validated with 25 series and no source warnings.
+- Version 1.5.0 was installed with configuration/plugin backups; the shell restarted
+  successfully and the plugin is enabled. Its installed helper fetched the hosted
+  JSON into the local cache without errors.
 
 ## Previous desktop validation
 
