@@ -33,6 +33,30 @@ def cached():
 
 
 class CollectionTests(unittest.TestCase):
+    def test_empty_established_schedule_preserves_events_and_warns(self):
+        previous = cached()
+        original = copy.deepcopy(previous)
+        with patch('collector.fetch', return_value=collector.Document('<p>Changed markup</p>').root), \
+             patch('collector.parse_branches', return_value=[dict(b, events=[]) for b in previous['branches']]), \
+             patch('collector.parse_downloads', return_value=[event('3.15.2', '2026-09-28', True)]):
+            result = collector.collect(previous)
+        current = result['branches'][0]
+        self.assertTrue(current['scheduleError'])
+        self.assertTrue(result['warnings'])
+        self.assertEqual([e for e in current['events'] if not e['confirmed']], previous['branches'][0]['events'])
+        self.assertTrue(any(e['confirmed'] for e in current['events']))
+        self.assertEqual(previous, original)
+        self.assertTrue(releases.validate_cache(result))
+
+    def test_new_schedule_without_dates_is_allowed(self):
+        new = branch('3.16', 'https://peps.python.org/pep-0826/')
+        with patch('collector.fetch', return_value=collector.Document('<p>No dates yet</p>').root), \
+             patch('collector.parse_branches', return_value=[new]), \
+             patch('collector.parse_downloads', return_value=[]):
+            result = collector.collect()
+        self.assertEqual(result['warnings'], [])
+        self.assertFalse(result['branches'][0]['scheduleError'])
+
     def collect(self, failures=(), parser_fail=False):
         previous = cached()
         original = copy.deepcopy(previous)
@@ -65,7 +89,7 @@ class CollectionTests(unittest.TestCase):
     def test_archive_failure_preserves_confirmations_and_new_schedule(self):
         result = self.collect([releases.DOWNLOADS])
         self.assertEqual(result['branches'][0]['events'][0]['date'], '2026-10-08')
-        self.assertTrue(result['branches'][1]['events'][0]['confirmed'])
+        self.assertTrue(any(e['confirmed'] for e in result['branches'][1]['events']))
 
     def test_guide_failure_still_updates_schedules(self):
         result = self.collect([collector.VERSIONS])

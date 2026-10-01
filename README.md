@@ -116,7 +116,8 @@ trigger GitHub Actions or scrape upstream sources. The countdown is recalculated
 every minute from the local cache using the local date. Failed downloads retry
 after ten minutes, preserving valid cached data. Source warnings in a valid feed
 do not trigger repeated downloads. Invalid feeds are rejected before replacing
-the cache. Data older than 13 hours is marked stale.
+the cache. Data older than 19 hours is marked stale: six hours between feed builds,
+twelve hours between client downloads, and one hour of scheduling tolerance.
 
 GitHub schedules can be delayed, and scheduled workflows in public repositories
 are disabled after 60 days without repository activity. Maintainers should check

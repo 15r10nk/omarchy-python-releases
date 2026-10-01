@@ -1,4 +1,5 @@
 import copy
+from datetime import datetime, timedelta, timezone, date
 import io
 import json
 from pathlib import Path
@@ -13,6 +14,17 @@ from test_regressions import cached
 
 
 class FeedTests(unittest.TestCase):
+    def test_staleness_allows_publication_and_download_intervals(self):
+        now = datetime(2026, 10, 1, 20, tzinfo=timezone.utc)
+        for age, expected in ((0, False), (14, False), (18, False), (19, False), (20, True)):
+            with self.subTest(age=age):
+                data = cached()
+                data['fetchedAt'] = (now - timedelta(hours=age)).isoformat()
+                with patch('releases.datetime') as clock:
+                    clock.now.return_value = now
+                    clock.fromisoformat.side_effect = datetime.fromisoformat
+                    self.assertEqual(releases.present(data, date(2026, 10, 1))['stale'], expected)
+
     def test_download_validates_json_and_uses_only_feed_url(self):
         data = cached()
         with patch('releases.urlopen', return_value=io.BytesIO(json.dumps(data).encode())) as get:

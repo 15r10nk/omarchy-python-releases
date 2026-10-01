@@ -48,7 +48,7 @@ Ui.Panel {
   readonly property string modeLabel: favorite ? "★ Python " + favorite + " · " + t(mode === "all" ? "all" : "stable") : t(mode)
   readonly property string countdown: nextRelease ? (nextRelease.days === 0 ? t("today") : nextRelease.days === 1 ? t("oneDay") : t("days", {n: nextRelease.days})) : t("noDate")
   readonly property string errorText: favoriteSaveError ? t("favoriteSaveError") : processError ? t(processError) : (report.warnings || []).length ? t("partialError") : report.error ? t(report.fetchedAt ? "cachedError" : "emptyError") : ""
-  readonly property bool stale: !!report.fetchedAt && Date.now() - Date.parse(report.fetchedAt) > 13 * 3600000
+  readonly property bool stale: report.stale === true
   readonly property var visibleEvents: {
     var events = []
     if (upcomingOnly) {

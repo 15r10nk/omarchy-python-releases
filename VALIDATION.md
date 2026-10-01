@@ -1,3 +1,10 @@
+# Review fixes — 1.5.1
+
+- Unexpectedly empty established schedules retain cached events and emit warnings.
+- Staleness is calculated locally with a 19-hour threshold, allowing the six-hour
+  feed schedule, twelve-hour client cache and one hour of scheduling tolerance.
+- 31 Python tests, both JavaScript suites and QML/plugin validation passed.
+
 # Feed migration validation
 
 Version **1.5.0**, checked on **2026-10-01**.

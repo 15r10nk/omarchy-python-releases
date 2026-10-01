@@ -14,6 +14,8 @@ from urllib.parse import urlsplit
 
 DOWNLOADS = "https://www.python.org/downloads/"
 TTL = 12 * 60 * 60
+# Six-hour publication cadence + client TTL + one hour scheduling tolerance.
+STALE_AFTER = 6 * 60 * 60 + TTL + 60 * 60
 
 
 FEED_URL = "https://15r10nk.github.io/omarchy-python-releases/releases.json"
@@ -54,7 +56,9 @@ def present(data, today, mode="feature", error=""):
     next_event = dict(upcoming[0]) if upcoming else None
     if next_event:
         next_event["days"] = (date.fromisoformat(next_event["date"]) - today).days
-    return dict(data, next=next_event, today=today.isoformat(), error=error)
+    fetched_at = data.get("fetchedAt")
+    stale = bool(fetched_at) and (datetime.now(timezone.utc) - datetime.fromisoformat(fetched_at)).total_seconds() > STALE_AFTER
+    return dict(data, next=next_event, today=today.isoformat(), error=error, stale=stale)
 
 
 def valid_date(value, partial=False):

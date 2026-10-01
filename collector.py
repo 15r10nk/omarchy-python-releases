@@ -187,6 +187,8 @@ def collect(previous=None):
             if root is None:
                 raise ValueError("Releaseplan nicht erreichbar")
             branch["events"] = parse_schedule(root, branch)
+            if not branch["events"] and cached.get("events"):
+                raise ValueError("Established release schedule unexpectedly empty")
             successful_sources += 1
         except Exception:
             branch["scheduleError"] = True
