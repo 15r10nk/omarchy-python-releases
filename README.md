@@ -15,11 +15,10 @@ series to follow its next release in the bar.
 
 ## Install
 
-Once a public repository is available, use Omarchy's native plugin manager.
-**Replace the placeholder URL** with the actual repository URL:
+Use Omarchy's native plugin manager:
 
 ```sh
-omarchy plugin add https://github.com/OWNER/REPOSITORY.git --enable
+omarchy plugin add https://github.com/15r10nk/omarchy-python-releases.git --enable
 ```
 
 The ID `frank.python-releases` is a namespace, not a required local username.
@@ -93,16 +92,36 @@ the shell with the new locale; logging out and back in may be necessary.
 
 ## Data, refresh and permissions
 
+The plugin downloads a single [JSON feed](https://15r10nk.github.io/omarchy-python-releases/releases.json).
+It does not scrape release websites locally. The feed contains `schema: 1`,
+`fetchedAt` (UTC collection timestamp), `branches` and source `warnings`.
+Each branch includes support dates and release events.
+
+The **Publish Python release feed** GitHub Actions workflow collects data every
+**6 hours**, at 00:17, 06:17, 12:17 and 18:17 UTC, and can also be run manually.
 Sources: [Python Developer's Guide](https://devguide.python.org/versions/), linked
 [release PEPs](https://peps.python.org/), and the
 [Python release archive](https://www.python.org/downloads/).
 
-All sources refresh every **12 hours**, regardless of the selected series. The
-countdown is recalculated every minute from the cache using the local date.
-Failed updates retry after ten minutes. Successful sources update independently;
-only unavailable data is retained from the cache. The panel flags incomplete
-results. The update timestamp reflects the last successful partial fetch; a full
-outage retains the previous timestamp. Invalid caches are discarded and rebuilt.
+The workflow reads the previous published feed before collecting. Successful
+sources update independently; unavailable sources retain their previous data
+with warnings. Invalid output and complete source outages fail the job and leave
+the published feed untouched. First publication requires all sources to succeed.
+The timestamp reflects the last successful partial collection. Source warnings
+remain visible in the plugin.
+
+The plugin downloads the feed every **12 hours**, regardless of the selected
+series. **Refresh** downloads the latest published JSON immediately; it does not
+trigger GitHub Actions or scrape upstream sources. The countdown is recalculated
+every minute from the local cache using the local date. Failed downloads retry
+after ten minutes, preserving valid cached data. Source warnings in a valid feed
+do not trigger repeated downloads. Invalid feeds are rejected before replacing
+the cache. Data older than 13 hours is marked stale.
+
+GitHub schedules can be delayed, and scheduled workflows in public repositories
+are disabled after 60 days without repository activity. Maintainers should check
+workflow failures and re-enable the schedule when needed; see
+[GitHub's schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
 
 Future dates are provisional. Security updates often have no fixed schedule.
 A past PEP date alone is not proof of publication. Historical prereleases are
@@ -110,7 +129,7 @@ included where their dated entries can be parsed; unknown EOL dates are shown
 as unspecified. The PEP takes precedence for the countdown if source dates differ.
 
 The QML plugin runs in the existing shell with your user permissions. It starts
-a Python helper for HTTPS requests and JSON processing. The helper writes only
+a Python helper for one HTTPS JSON download and local processing. The helper writes only
 under `$XDG_CACHE_HOME/omarchy-python-releases/` (normally `~/.cache/…`), with
 network timeouts and an atomic cache shared across monitors. Preferences are
 saved through Omarchy's scoped settings API. Browser links open when clicked.
@@ -144,7 +163,8 @@ you can delete `~/.cache/omarchy-python-releases/` separately if desired.
 `BarWidget.qml` owns the bar button, loads `Panel.qml` and forwards its lifecycle.
 The panel uses Omarchy's `Panel`, `KeyboardPanel` and `PanelKeyCatcher` components.
 `Selection.js` handles favorites; `Translations.js` contains translations;
-`releases.py` retrieves and caches data. The structure follows the
+`releases.py` downloads, validates and caches the feed; `collector.py` parses
+upstream sources only in the publishing job. The structure follows the
 [Omarchy development guide](https://plugins.omarchy.org/develop.html).
 
 Tests additionally need Node.js; QML checks need Qt's `qmllint` and the installed
@@ -170,8 +190,25 @@ omarchy-shell shell hide frank.python-releases
 omarchy plugin list --json
 ```
 
-Replace the repository URL placeholder before submitting a marketplace listing.
-These tools do not publish or submit the plugin.
+### Feed deployment
+
+Enable **Settings → Pages → Source → GitHub Actions** for the repository, then
+push the workflow to `main` and run **Publish Python release feed**. The workflow
+publishes only `_site/`, containing the JSON and a small index page. It uses
+GitHub's built-in token; no personal token or client credentials are needed.
+Pages hosting must be available for the repository's visibility and account plan.
+
+To build a preview locally:
+
+```sh
+python3 scripts/build_feed.py --output /tmp/python-release-feed
+```
+
+The builder treats a 404 at the feed URL as first deployment. Other download or
+validation failures abort the build to avoid losing fallback history. Existing
+local schema-1 caches remain compatible after upgrading the plugin.
+
+These tools do not submit the plugin to the Omarchy marketplace.
 
 ## License
 

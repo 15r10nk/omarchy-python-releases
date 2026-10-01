@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 import releases
+import collector
 
 
 class ReleasesTest(unittest.TestCase):
@@ -43,7 +44,7 @@ class ReleasesTest(unittest.TestCase):
         self.assertEqual(releases.present(dict(branches=[branch]), date(2026, 10, 24))["next"]["days"], 2)
 
     def test_schedule_stages_and_cancelled(self):
-        root = releases.Document('''<ul>
+        root = collector.Document('''<ul>
           <li>3.15 development begins: Wednesday, 2025-05-07</li>
           <li>3.15.0 alpha 1: Tuesday, 2025-10-14</li>
           <li>3.15.0 beta 1: Thursday, 2026-05-07 (Feature freeze)</li>
@@ -51,23 +52,23 @@ class ReleasesTest(unittest.TestCase):
           <li>3.15.0 candidate 3: 2026-09-20 (cancelled)</li>
           <li>3.15.0 final: Thursday, 2026-10-01</li>
           <li>3.14.9: 2026-12-01</li></ul>''').root
-        events = releases.parse_schedule(root, self.branch())
+        events = collector.parse_schedule(root, self.branch())
         self.assertEqual([e["kind"] for e in events], ["development", "alpha", "beta", "rc", "stable"])
         self.assertEqual(events[3]["version"], "3.15.0rc2")
 
     def test_branch_precision_and_dynamic_main(self):
-        root = releases.Document('''<p>The main branch is currently the future Python 3.16</p><table>
+        root = collector.Document('''<p>The main branch is currently the future Python 3.16</p><table>
           <tr><td>main</td><td><a href="https://peps.python.org/pep-0826/">PEP 826</a></td>
           <td>feature</td><td><em>2027-10-06</em></td><td><em>2032-10</em></td><td>Manager</td></tr></table>''').root
-        b = releases.parse_branches(root)[0]
+        b = collector.parse_branches(root)[0]
         self.assertEqual(b["version"], "3.16")
         self.assertEqual(b["eol"], "2032-10")
         self.assertTrue(b["eolEstimated"])
 
     def test_download_date_and_link(self):
-        root = releases.Document('''<ol><li><span class="release-number"><a href="/downloads/release/python-3147/">Python 3.14.7</a></span>
+        root = collector.Document('''<ol><li><span class="release-number"><a href="/downloads/release/python-3147/">Python 3.14.7</a></span>
           <span class="release-date">Aug. 5, 2026</span></li></ol>''').root
-        event = releases.parse_downloads(root)[0]
+        event = collector.parse_downloads(root)[0]
         self.assertEqual(event["date"], "2026-08-05")
         self.assertTrue(event["confirmed"])
         self.assertEqual(event["url"], "https://www.python.org/downloads/release/python-3147/")
@@ -88,7 +89,7 @@ class ReleasesTest(unittest.TestCase):
             releases.write_cache(path, data)
             import os
             os.utime(path, (0, 0))
-            with patch("sys.argv", ["releases.py", "--cache-dir", directory]), patch("releases.collect", side_effect=OSError("offline")) as fetch, patch("builtins.print") as out:
+            with patch("sys.argv", ["releases.py", "--cache-dir", directory]), patch("releases.fetch_feed", side_effect=OSError("offline")) as fetch, patch("builtins.print") as out:
                 releases.main()
                 first = json.loads(out.call_args.args[0])
                 self.assertEqual(first["branches"], data["branches"])
@@ -106,7 +107,7 @@ class ReleasesTest(unittest.TestCase):
             os.utime(path, (0, 0))
             fresh = copy.deepcopy(data)
             fresh.update(fetchedAt="2026-09-28T00:00:00+00:00", warnings=["Releaseplan nicht erreichbar"])
-            with patch("sys.argv", ["releases.py", "--cache-dir", directory]), patch("releases.collect", return_value=fresh), patch("builtins.print") as out:
+            with patch("sys.argv", ["releases.py", "--cache-dir", directory]), patch("releases.fetch_feed", return_value=fresh), patch("builtins.print") as out:
                 releases.main()
                 self.assertEqual(json.loads(out.call_args.args[0])["fetchedAt"], fresh["fetchedAt"])
             self.assertEqual(releases.read_cache(path), fresh)

@@ -1,0 +1,55 @@
+name: Publish Python release feed
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-feed.yml'
+      - 'collector.py'
+      - 'releases.py'
+      - 'scripts/build_feed.py'
+      - 'tests/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-release-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - name: Test
+        run: |
+          python -m unittest discover -s tests -v
+          node tests/test_selection.cjs
+          node tests/test_translations.cjs
+      - name: Collect and validate feed
+        run: python scripts/build_feed.py
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy feed
+        id: deployment
+        uses: actions/deploy-pages@v4

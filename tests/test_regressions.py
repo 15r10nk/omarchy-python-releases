@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 import releases
+import collector
 
 
 def branch(version, url):
@@ -43,8 +44,8 @@ class CollectionTests(unittest.TestCase):
             if parser_fail and b['version'] == '2.6':
                 raise ValueError('bad date')
             return [event('3.15.0', '2026-10-08')] if b['version'] == '3.15' else []
-        with patch('releases.fetch', side_effect=fetch), patch('releases.parse_branches', side_effect=lambda _: [dict(b, events=[]) for b in cached()['branches']]), patch('releases.parse_schedule', side_effect=schedule), patch('releases.parse_downloads', return_value=[event('3.15.2', '2026-09-28', True)]):
-            result = releases.collect(previous)
+        with patch('collector.fetch', side_effect=fetch), patch('collector.parse_branches', side_effect=lambda _: [dict(b, events=[]) for b in cached()['branches']]), patch('collector.parse_schedule', side_effect=schedule), patch('collector.parse_downloads', return_value=[event('3.15.2', '2026-09-28', True)]):
+            result = collector.collect(previous)
         self.assertEqual(previous, original, 'Do not modify fallback data in memory')
         self.assertTrue(releases.validate_cache(result))
         return result
@@ -67,12 +68,12 @@ class CollectionTests(unittest.TestCase):
         self.assertTrue(result['branches'][1]['events'][0]['confirmed'])
 
     def test_guide_failure_still_updates_schedules(self):
-        result = self.collect([releases.VERSIONS])
+        result = self.collect([collector.VERSIONS])
         self.assertEqual(result['branches'][0]['events'][1]['date'], '2026-10-08')
         self.assertTrue(result['warnings'])
 
     def test_total_outage_retains_original_timestamp(self):
-        result = self.collect([releases.VERSIONS, releases.DOWNLOADS, 'https://peps.python.org/pep-0790/', 'https://peps.python.org/pep-0361/'])
+        result = self.collect([collector.VERSIONS, releases.DOWNLOADS, 'https://peps.python.org/pep-0790/', 'https://peps.python.org/pep-0361/'])
         self.assertEqual(result['fetchedAt'], cached()['fetchedAt'])
         self.assertEqual(result['branches'][0]['events'], cached()['branches'][0]['events'])
 
@@ -98,9 +99,9 @@ class CacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'releases.json'
             path.write_text('{"schema":1,"branches":[{"version":"3.15"}]}')
-            with patch('sys.argv', ['releases.py', '--cache-dir', directory]), patch('releases.collect', return_value=cached()) as collect, patch('builtins.print') as output:
+            with patch('sys.argv', ['releases.py', '--cache-dir', directory]), patch('releases.fetch_feed', return_value=cached()) as collect, patch('builtins.print') as output:
                 releases.main()
-            collect.assert_called_once_with(None)
+            collect.assert_called_once_with()
             self.assertEqual(json.loads(output.call_args.args[0])['branches'], cached()['branches'])
             self.assertEqual(releases.read_cache(path), cached())
 
@@ -109,7 +110,7 @@ class CacheTests(unittest.TestCase):
             path = Path(directory) / 'releases.json'
             path.write_text('{"schema":1,"branches":[{"version":"3.15"}]}')
             for args in (['--cached'], []):
-                with patch('sys.argv', ['releases.py', '--cache-dir', directory] + args), patch('releases.collect', side_effect=OSError('offline')), patch('builtins.print') as output:
+                with patch('sys.argv', ['releases.py', '--cache-dir', directory] + args), patch('releases.fetch_feed', side_effect=OSError('offline')), patch('builtins.print') as output:
                     releases.main()
                 self.assertEqual(json.loads(output.call_args.args[0])['branches'], [])
 

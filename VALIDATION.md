@@ -1,4 +1,18 @@
-# Validation
+# Feed migration validation
+
+Version **1.5.0**, checked on **2026-10-01**.
+
+- Plugin validator and QML/JavaScript lint passed.
+- 28 Python tests passed, including feed validation, oversized/invalid responses,
+  offline cache preservation, source warnings, first deployment, partial source
+  failures and complete outages.
+- Both JavaScript suites passed, including all 13 locales.
+- Live collection produced a validated feed from the official Python sources.
+- Repository visibility is public and GitHub Pages is enabled with Actions as
+  the publishing source. Initial deployment and installed-plugin verification
+  are in progress.
+
+## Previous desktop validation
 
 Version **1.4.0**, checked on **2026-09-29** with Omarchy **4.0.3-1** and
 Quickshell **0.3.1**.
@@ -38,5 +52,4 @@ submission have not been tested or performed.
 - Click the bar to open/close, click outside to dismiss, and check right/middle
   click refresh.
 - Check Tab/Shift+Tab switching with another panel available.
-- Replace the README repository URL placeholder with the public repository URL.
 - Repeat validation on the final publication checkout.
