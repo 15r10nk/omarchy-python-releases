@@ -33,6 +33,19 @@ def cached():
 
 
 class CollectionTests(unittest.TestCase):
+    def test_archive_only_history_does_not_imply_a_parsed_schedule(self):
+        previous = cached()
+        for b in previous['branches']:
+            b['events'] = [event(b['version'] + '.1', '2008-12-01', True)]
+        archive = [e for b in previous['branches'] for e in b['events']]
+        with patch('collector.fetch', return_value=collector.Document('<p>Historical schedule</p>').root), \
+             patch('collector.parse_branches', return_value=[dict(b, events=[]) for b in previous['branches']]), \
+             patch('collector.parse_downloads', return_value=archive):
+            result = collector.collect(previous)
+        self.assertEqual(result['warnings'], [])
+        self.assertTrue(all(not b['scheduleError'] for b in result['branches']))
+        self.assertEqual([e for b in result['branches'] for e in b['events']], archive)
+
     def test_empty_established_schedule_preserves_events_and_warns(self):
         previous = cached()
         original = copy.deepcopy(previous)
