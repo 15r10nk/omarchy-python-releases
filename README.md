@@ -4,6 +4,8 @@ A Python release countdown for the Omarchy Quattro bar. Click to explore release
 schedules, prereleases, support status and end-of-life dates. Star a version
 series to follow its next release in the bar.
 
+![Python Releases panel showing version selection, the release countdown, and upcoming milestones](docs/images/python-releases.png)
+
 ## Requirements
 
 - Omarchy with the Quattro/Quickshell shell and native `omarchy plugin` commands.
