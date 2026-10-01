@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "frank.python-releases",
+  "name": "Python Releases",
+  "version": "1.4.0",
+  "author": "Frank",
+  "description": "Python release countdown, release schedules and end-of-life dates for the Omarchy bar.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Python Releases",
+    "category": "Development",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "countdown": "feature",
+      "favorite": ""
+    },
+    "schema": [
+      {
+        "key": "countdown",
+        "type": "string",
+        "label": "Countdown: feature, stable or all"
+      }
+    ]
+  },
+  "license": "MIT"
+}
