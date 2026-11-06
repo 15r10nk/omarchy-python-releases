@@ -5,7 +5,7 @@ Ui.BarWidget {
   id: root
   moduleName: "frank.python-releases"
 
-  readonly property Panel panel: panelLoader.item as Panel
+  readonly property var panel: panelLoader.item
   readonly property bool opened: root.panel ? root.panel.opened : false
   readonly property bool popoutSwitchClosing: root.panel ? root.panel.popoutSwitchClosing : false
 
