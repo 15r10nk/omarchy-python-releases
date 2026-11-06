@@ -183,10 +183,10 @@ Ui.Panel {
     open: root.opened
     contentWidth: popup.fittedContentWidth(Style.space(820))
     contentHeight: popup.cappedContentHeight(Style.space(650))
-    focusTarget: content
+    focusTarget: panelContent
 
     Ui.PanelKeyCatcher {
-      id: content
+      id: panelContent
       anchors.fill: parent
       onCloseRequested: root.close()
       onTabRequested: function (direction) {
