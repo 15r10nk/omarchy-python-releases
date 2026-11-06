@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Install the local plugin and enable it in the running Omarchy shell."""
+
 from datetime import datetime
 import json
 import os
@@ -43,13 +44,29 @@ if target.exists():
     shutil.copytree(target, backup)
     print("Plugin gesichert:", backup, flush=True)
 target.mkdir(parents=True, exist_ok=True)
-for name in ("manifest.json", "BarWidget.qml", "Panel.qml", "Label.qml", "Action.qml", "Translations.js", "Selection.js", "releases.py", "README.md", "VALIDATION.md", "LICENSE"):
+for name in (
+    "manifest.json",
+    "BarWidget.qml",
+    "Panel.qml",
+    "Label.qml",
+    "Action.qml",
+    "Translations.js",
+    "Selection.js",
+    "releases.py",
+    "README.md",
+    "VALIDATION.md",
+    "LICENSE",
+):
     shutil.copy2(source / name, target / name)
 # Remove the previous entry point after the complete replacement has been copied.
 (target / "Widget.qml").unlink(missing_ok=True)
 subprocess.run(["omarchy", "plugin", "validate", str(target)], check=True)
 subprocess.run(["omarchy-shell", "shell", "rescanPlugins"], check=True)
-subprocess.run(["omarchy", "plugin", "enable", "frank.python-releases"] + ([] if already_enabled else ["--section", "right", "--index", "0"]), check=True)
+subprocess.run(
+    ["omarchy", "plugin", "enable", "frank.python-releases"]
+    + ([] if already_enabled else ["--section", "right", "--index", "0"]),
+    check=True,
+)
 print("Omarchy-Shell wird neu geladen …", flush=True)
 subprocess.run(["omarchy", "restart", "shell"], check=True)
 print("Installiert:", target)

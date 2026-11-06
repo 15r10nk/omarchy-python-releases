@@ -9,17 +9,30 @@ Ui.BarWidget {
   readonly property bool opened: root.panel ? root.panel.opened : false
   readonly property bool popoutSwitchClosing: root.panel ? root.panel.popoutSwitchClosing : false
 
-  function open() { if (root.panel) root.panel.open() }
-  function close() { if (root.panel) root.panel.close() }
-  function toggle() { if (root.panel) root.panel.toggle() }
-  function closeForPopoutSwitch() { if (root.panel) root.panel.closeForPopoutSwitch() }
+  function open() {
+    if (root.panel)
+      root.panel.open();
+  }
+  function close() {
+    if (root.panel)
+      root.panel.close();
+  }
+  function toggle() {
+    if (root.panel)
+      root.panel.toggle();
+  }
+  function closeForPopoutSwitch() {
+    if (root.panel)
+      root.panel.closeForPopoutSwitch();
+  }
 
   function injectPanel() {
-    if (!root.panel) return
-    root.panel.bar = root.bar
-    root.panel.settings = root.settings
-    root.panel.anchorItem = button
-    root.panel.hostWidget = root
+    if (!root.panel)
+      return;
+    root.panel.bar = root.bar;
+    root.panel.settings = root.settings;
+    root.panel.anchorItem = button;
+    root.panel.hostWidget = root;
   }
 
   implicitWidth: button.implicitWidth
@@ -33,8 +46,8 @@ Ui.BarWidget {
     source: Qt.resolvedUrl("Panel.qml")
     visible: false
     onLoaded: {
-      root.injectPanel()
-      Qt.callLater(root.injectPanel)
+      root.injectPanel();
+      Qt.callLater(root.injectPanel);
     }
   }
 
@@ -44,10 +57,12 @@ Ui.BarWidget {
     bar: root.bar
     text: root.panel ? root.panel.barLabel : " …"
     tooltipText: root.panel ? root.panel.barTooltip : ""
-    onPressed: function(buttonCode) {
+    onPressed: function (buttonCode) {
       if (buttonCode === Qt.RightButton || buttonCode === Qt.MiddleButton) {
-        if (root.panel) root.panel.refresh(true)
-      } else if (buttonCode === Qt.LeftButton) root.toggle()
+        if (root.panel)
+          root.panel.refresh(true);
+      } else if (buttonCode === Qt.LeftButton)
+        root.toggle();
     }
   }
 }

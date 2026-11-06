@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Hosted Python release feed, local cache and countdowns; standard library only."""
+
 import argparse
 from datetime import date, datetime, timezone
 import fcntl
@@ -24,8 +25,13 @@ MAX_FEED_BYTES = 8_000_000
 
 def fetch_feed(url=FEED_URL):
     """Download and validate the hosted feed before replacing any local data."""
-    request = Request(url, headers={"User-Agent": "Omarchy-Python-Releases/1.5",
-                                   "Accept": "application/json"})
+    request = Request(
+        url,
+        headers={
+            "User-Agent": "Omarchy-Python-Releases/1.5",
+            "Accept": "application/json",
+        },
+    )
     with urlopen(request, timeout=30) as response:
         payload = response.read(MAX_FEED_BYTES + 1)
     if len(payload) > MAX_FEED_BYTES:
@@ -42,12 +48,28 @@ def present(data, today, mode="feature", error=""):
         # First releases also exist in the developer guide if a PEP is unavailable.
         events = list(branch["events"])
         first_version = branch["version"] + ".0"
-        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", branch["first"]) and not any(e["version"] == first_version for e in events):
-            events.append(dict(version=first_version, date=branch["first"], kind="stable", url=branch["url"], confirmed=False))
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", branch["first"]) and not any(
+            e["version"] == first_version for e in events
+        ):
+            events.append(
+                dict(
+                    version=first_version,
+                    date=branch["first"],
+                    kind="stable",
+                    url=branch["url"],
+                    confirmed=False,
+                )
+            )
         for event in events:
-            if event["date"] < today.isoformat() or event["confirmed"] or event["kind"] == "development":
+            if (
+                event["date"] < today.isoformat()
+                or event["confirmed"]
+                or event["kind"] == "development"
+            ):
                 continue
-            if mode == "feature" and (event["kind"] != "stable" or event["version"] != first_version):
+            if mode == "feature" and (
+                event["kind"] != "stable" or event["version"] != first_version
+            ):
                 continue
             if mode == "stable" and event["kind"] != "stable":
                 continue
@@ -57,8 +79,16 @@ def present(data, today, mode="feature", error=""):
     if next_event:
         next_event["days"] = (date.fromisoformat(next_event["date"]) - today).days
     fetched_at = data.get("fetchedAt")
-    stale = bool(fetched_at) and (datetime.now(timezone.utc) - datetime.fromisoformat(fetched_at)).total_seconds() > STALE_AFTER
-    return dict(data, next=next_event, today=today.isoformat(), error=error, stale=stale)
+    stale = (
+        bool(fetched_at)
+        and (
+            datetime.now(timezone.utc) - datetime.fromisoformat(fetched_at)
+        ).total_seconds()
+        > STALE_AFTER
+    )
+    return dict(
+        data, next=next_event, today=today.isoformat(), error=error, stale=stale
+    )
 
 
 def valid_date(value, partial=False):
@@ -88,20 +118,29 @@ def validate_cache(data):
             return False
     except ValueError:
         return False
-    if not isinstance(data.get("warnings"), list) or not all(isinstance(w, str) for w in data["warnings"]):
+    if not isinstance(data.get("warnings"), list) or not all(
+        isinstance(w, str) for w in data["warnings"]
+    ):
         return False
     if not isinstance(data.get("branches"), list) or not data["branches"]:
         return False
     for branch in data["branches"]:
         if not isinstance(branch, dict):
             return False
-        if not isinstance(branch.get("version"), str) or not re.fullmatch(r"\d+\.\d+", branch["version"]):
+        if not isinstance(branch.get("version"), str) or not re.fullmatch(
+            r"\d+\.\d+", branch["version"]
+        ):
             return False
-        if not all(isinstance(branch.get(k), str) for k in ("status", "manager", "url")):
+        if not all(
+            isinstance(branch.get(k), str) for k in ("status", "manager", "url")
+        ):
             return False
         if branch["url"] and not valid_source_url(branch["url"]):
             return False
-        if not all(isinstance(branch.get(k), bool) for k in ("firstEstimated", "eolEstimated", "scheduleError")):
+        if not all(
+            isinstance(branch.get(k), bool)
+            for k in ("firstEstimated", "eolEstimated", "scheduleError")
+        ):
             return False
         if not all(valid_date(branch.get(k), partial=True) for k in ("first", "eol")):
             return False
@@ -114,9 +153,17 @@ def validate_cache(data):
                 return False
             if not valid_source_url(event["url"]):
                 return False
-            if event.get("kind") not in ("stable", "alpha", "beta", "rc", "development"):
+            if event.get("kind") not in (
+                "stable",
+                "alpha",
+                "beta",
+                "rc",
+                "development",
+            ):
                 return False
-            if not isinstance(event.get("confirmed"), bool) or not valid_date(event.get("date")):
+            if not isinstance(event.get("confirmed"), bool) or not valid_date(
+                event.get("date")
+            ):
                 return False
     return True
 
@@ -124,8 +171,11 @@ def validate_cache(data):
 def valid_source_url(value):
     try:
         url = urlsplit(value)
-        return (url.scheme == "https" and url.netloc in
-                ("www.python.org", "peps.python.org", "devguide.python.org"))
+        return url.scheme == "https" and url.netloc in (
+            "www.python.org",
+            "peps.python.org",
+            "devguide.python.org",
+        )
     except ValueError:
         return False
 
@@ -152,9 +202,18 @@ def write_cache(path, data):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--refresh", action="store_true")
-    parser.add_argument("--cached", action="store_true", help="Read only; never access the network")
-    parser.add_argument("--mode", choices=["feature", "stable", "all"], default="feature")
-    parser.add_argument("--cache-dir", type=Path, default=Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "omarchy-python-releases")
+    parser.add_argument(
+        "--cached", action="store_true", help="Read only; never access the network"
+    )
+    parser.add_argument(
+        "--mode", choices=["feature", "stable", "all"], default="feature"
+    )
+    parser.add_argument(
+        "--cache-dir",
+        type=Path,
+        default=Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+        / "omarchy-python-releases",
+    )
     args = parser.parse_args()
     path = args.cache_dir / "releases.json"
     failure_path = args.cache_dir / "failure.json"
@@ -169,11 +228,17 @@ def main():
                 age = time.time() - path.stat().st_mtime if data else float("inf")
                 try:
                     failure = json.loads(failure_path.read_text())
-                    if not isinstance(failure, dict) or not isinstance(failure.get("time"), (int, float)) or not isinstance(failure.get("error"), str):
+                    if (
+                        not isinstance(failure, dict)
+                        or not isinstance(failure.get("time"), (int, float))
+                        or not isinstance(failure.get("error"), str)
+                    ):
                         failure = {}
                 except (OSError, ValueError):
                     failure = {}
-                retry_later = time.time() - failure.get("time", 0) < 600 and not args.refresh
+                retry_later = (
+                    time.time() - failure.get("time", 0) < 600 and not args.refresh
+                )
                 if retry_later:
                     error = failure.get("error", "Aktualisierung fehlgeschlagen")
                 elif (args.refresh and age > 10) or age > TTL or failure:

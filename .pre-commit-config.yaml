@@ -5,3 +5,16 @@ repos:
       - id: check-json
       - id: check-yaml
       - id: check-merge-conflict
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.4
+    hooks:
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: qmlformat
+        name: Format QML
+        language: python
+        entry: pyside6-qmlformat
+        additional_dependencies: [PySide6-Essentials==6.12.0]
+        files: '\.qml$'
+        args: [--inplace, --indent-width, '2', --newline, unix]

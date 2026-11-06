@@ -163,6 +163,22 @@ you can delete `~/.cache/omarchy-python-releases/` separately if desired.
 
 ## Development and validation
 
+Install [pre-commit](https://pre-commit.com/#install), then enable the formatting
+hooks and format the existing checkout:
+
+```sh
+pre-commit install
+pre-commit run --all-files
+```
+
+The hooks use [Ruff](https://docs.astral.sh/ruff/formatter/) for Python and
+Qt's [qmlformat](https://doc.qt.io/qt-6/qtqml-tooling-qmlformat.html) for QML.
+Pre-commit installs the pinned tool versions in isolated environments; QML
+formatting uses the tool bundled with PySide6 Essentials, so no system Qt
+installation is needed. QML keeps two-space indentation and import order.
+The same hooks run in pre-commit.ci and automatically commit formatting fixes
+to pull requests.
+
 `BarWidget.qml` owns the bar button, loads `Panel.qml` and forwards its lifecycle.
 The panel uses Omarchy's `Panel`, `KeyboardPanel` and `PanelKeyCatcher` components.
 `Selection.js` handles favorites; `Translations.js` contains translations;

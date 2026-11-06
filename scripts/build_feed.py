@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Build a validated Pages artifact, using the published feed as fallback."""
+
 import argparse
 from pathlib import Path
 import sys
@@ -29,10 +30,11 @@ def build(output, previous_url=FEED_URL):
     write_cache(output / "releases.json", fresh)
     (output / "index.html").write_text(
         '<!doctype html><html lang="en"><meta charset="utf-8">'
-        '<title>Python release feed</title><h1>Python release feed</h1>'
+        "<title>Python release feed</title><h1>Python release feed</h1>"
         '<p><a href="releases.json">Download releases.json</a></p>'
         '<p><a href="https://github.com/15r10nk/omarchy-python-releases">'
-        'Source and documentation</a></p></html>\n')
+        "Source and documentation</a></p></html>\n"
+    )
     for warning in fresh["warnings"]:
         print(warning, file=sys.stderr)
     return fresh
