@@ -6,7 +6,7 @@ Rectangle {
   readonly property var popupColors: Color.popups
   property string text: ""
   property bool selected: false
-  signal clicked()
+  signal clicked
   implicitWidth: label.implicitWidth + 22
   implicitHeight: Style.space(32)
   radius: Style.space(5)
